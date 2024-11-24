@@ -5,29 +5,53 @@ const RoomMenu = ({ roomName, onStartGame }) => {
     const [players, setPlayers] = useState(0);
 
     useEffect(() => {
-        // Conectar al WebSocket y escuchar actualizaciones
-        connectToRoom(roomName, (message) => {
+        const handleMessage = (message) => {
+            console.log("Mensaje recibido:", message);
+            
             if (message.roomName === roomName) {
-                setPlayers(message.players); // Actualiza el número de jugadores si el mensaje es de la sala actual
+                const playerCount = message.currentPlayers;
+                console.log(`Actualizando jugadores en sala ${roomName} a: ${playerCount}`);
+                setPlayers(playerCount);
             }
-        });
+        };
 
-        // Al desmontar, salir de la sala
+        console.log(`Conectando a sala: ${roomName}`);
+        connectToRoom(roomName, handleMessage);
+
         return () => {
+            console.log(`Desconectando de sala: ${roomName}`);
             leaveRoom(roomName);
         };
     }, [roomName]);
 
     return (
-        <div>
-            <h2>Room: {roomName}</h2>
-            <p>Players Connected: {players}</p>
-            <div>
-                <button disabled>Choose Map (Coming Soon)</button>
-                <button disabled>Choose Mode (Coming Soon)</button>
+        <div className="p-4">
+            <h2 className="text-xl mb-4">Room: {roomName}</h2>
+            <p className="mb-4">Players Connected: {players}</p>
+            <div className="space-y-2 mb-4">
+                <button 
+                    className="w-full p-2 bg-gray-300 rounded disabled:opacity-50" 
+                    disabled
+                >
+                    Choose Map (Coming Soon)
+                </button>
+                <button 
+                    className="w-full p-2 bg-gray-300 rounded disabled:opacity-50" 
+                    disabled
+                >
+                    Choose Mode (Coming Soon)
+                </button>
             </div>
-            <button onClick={onStartGame} disabled={players < 2}>
-                Start Game
+            <button 
+                onClick={onStartGame}
+                disabled={players < 2}
+                className={`w-full p-2 rounded ${
+                    players < 2 
+                        ? 'bg-gray-300' 
+                        : 'bg-green-500 hover:bg-green-600 text-white'
+                }`}
+            >
+                Start Game {players < 2 ? `(Need ${2 - players} more player${2 - players === 1 ? '' : 's'})` : ''}
             </button>
         </div>
     );

@@ -1,14 +1,23 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { connectToRoom, leaveRoom } from "../services/WebSocketService";
 
 const RoomSelector = ({ onRoomJoin }) => {
     const [selectedRoom, setSelectedRoom] = useState(null);
     const [messages, setMessages] = useState([]);
 
+    useEffect(() => {
+        return () => {
+            if (selectedRoom) {
+                handleLeaveRoom();
+            }
+        };
+    }, []);
+
     const handleJoinRoom = (room) => {
         setSelectedRoom(room);
-        onRoomJoin(room); // Notificar a App sobre la sala seleccionada
+        onRoomJoin(room);
         connectToRoom(room, (message) => {
+            console.log("Received message:", message);
             setMessages((prev) => [...prev, message]);
         });
     };
@@ -17,27 +26,43 @@ const RoomSelector = ({ onRoomJoin }) => {
         if (selectedRoom) {
             leaveRoom(selectedRoom);
             setSelectedRoom(null);
+            setMessages([]);
+            onRoomJoin(null);
         }
     };
 
     return (
         <div>
             <h1>Room Selector</h1>
-            {["room1", "room2", "room3", "room4"].map((room) => (
-                <button key={room} onClick={() => handleJoinRoom(room)}>
-                    Join {room}
-                </button>
-            ))}
+            <div>
+                {["room1", "room2", "room3", "room4"].map((room) => (
+                    <button
+                        key={room}
+                        onClick={() => handleJoinRoom(room)}
+                        disabled={selectedRoom === room}
+                    >
+                        Join {room}
+                    </button>
+                ))}
+            </div>
+            
             {selectedRoom && (
-                <button onClick={handleLeaveRoom}>Leave {selectedRoom}</button>
+                <button onClick={handleLeaveRoom}>
+                    Leave {selectedRoom}
+                </button>
             )}
+            
             <div>
                 <h2>Messages</h2>
-                <ul>
+                <div>
                     {messages.map((msg, index) => (
-                        <li key={index}>{msg}</li>
+                        <div key={index}>
+                            <pre>
+                                {JSON.stringify(msg, null, 2)}
+                            </pre>
+                        </div>
                     ))}
-                </ul>
+                </div>
             </div>
         </div>
     );

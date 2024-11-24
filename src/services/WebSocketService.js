@@ -5,14 +5,17 @@ const SOCKET_URL = "http://localhost:8080/ws";
 
 let stompClient = null;
 
-/**
- * Conectar al WebSocket y unirse a una sala.
- * @param {string} roomName - Nombre de la sala a unirse.
- * @param {function} onMessageReceived - Callback para manejar mensajes recibidos.
- */
 export const connectToRoom = (roomName, onMessageReceived) => {
+    // Desconectar si ya hay una conexión activa
+    if (stompClient && stompClient.connected) {
+        stompClient.disconnect();
+    }
+
     const socket = new SockJS(SOCKET_URL);
     stompClient = Stomp.over(socket);
+    
+    // Deshabilitar logs de STOMP
+    stompClient.debug = () => {};
 
     stompClient.connect(
         {},
@@ -22,7 +25,9 @@ export const connectToRoom = (roomName, onMessageReceived) => {
             // Suscribirse al tema de la sala
             stompClient.subscribe("/topic/room-status", (message) => {
                 if (message.body) {
-                    onMessageReceived(JSON.parse(message.body));
+                    const parsedMessage = JSON.parse(message.body);
+                    console.log("WebSocket received message:", parsedMessage);
+                    onMessageReceived(parsedMessage);
                 }
             });
 
@@ -35,31 +40,22 @@ export const connectToRoom = (roomName, onMessageReceived) => {
     );
 };
 
-/**
- * Salir de una sala y desconectar el WebSocket.
- * @param {string} roomName - Nombre de la sala a abandonar.
- */
 export const leaveRoom = (roomName) => {
     if (stompClient && stompClient.connected) {
         try {
             stompClient.send("/app/leave", {}, roomName);
             console.log(`Left room: ${roomName}`);
-        } catch (error) {
-            console.error("Error while leaving room:", error);
-        } finally {
+            
             stompClient.disconnect(() => {
                 console.log("Disconnected from WebSocket");
+                stompClient = null;
             });
+        } catch (error) {
+            console.error("Error while leaving room:", error);
         }
-    } else {
-        console.warn("Cannot leave room: WebSocket client is not connected!");
     }
 };
 
-/**
- * Verificar si el WebSocket está conectado.
- * @returns {boolean} - `true` si el cliente está conectado, de lo contrario, `false`.
- */
 export const isConnected = () => {
     return stompClient && stompClient.connected;
 };
