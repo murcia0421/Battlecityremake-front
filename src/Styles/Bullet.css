@@ -1,0 +1,7 @@
+.bullet {
+    width: 10px;
+    height: 10px;
+    position: absolute;
+    background-color: red;
+    border-radius: 50%;
+}

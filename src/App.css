@@ -1,0 +1,57 @@
+/* Estructura principal */
+.app-container {
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+
+.room-selection {
+  padding: 20px;
+}
+
+.room-button {
+  padding: 10px 20px;
+  margin: 5px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+}
+
+.room-button.selected {
+  background-color: lightblue;
+}
+
+.start-button {
+  padding: 10px 20px;
+  background-color: green;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.start-button:hover {
+  background-color: darkgreen;
+}
+
+/* Diseño del juego */
+.game-container {
+  display: flex;
+  height: 100vh; /* Ocupa toda la pantalla */
+}
+
+/* Panel izquierdo */
+.left-panel,
+.right-panel {
+  width: 20%;
+  padding: 10px;
+  background-color: #f4f4f4;
+  border-right: 1px solid #ccc;
+  overflow-y: auto;
+}
+
+/* Centro */
+.center-panel {
+  width: 60%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #e0e0e0;
+}

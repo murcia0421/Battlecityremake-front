@@ -1,0 +1,20 @@
+.map {
+    display: grid;
+    grid-template-columns: repeat(32, 20px);
+    grid-template-rows: repeat(32, 20px);
+    gap: 1px;
+}
+.row {
+    display: flex;
+}
+.cell {
+    width: 20px;
+    height: 20px;
+    background-color: lightgray;
+}
+.cell.wall {
+    background-color: black;
+}
+.cell.empty {
+    background-color: white;
+}

@@ -1,0 +1,24 @@
+.game-map {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px; /* Espaciado entre filas */
+  }
+  
+  .map-row {
+    display: flex;
+    gap: 2px; /* Espaciado entre celdas */
+  }
+  
+  .map-cell {
+    width: 32px; /* Ajusta según el tamaño de tus sprites */
+    height: 32px;
+    position: relative;
+  }
+  
+  .map-cell-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Escala las imágenes correctamente */
+  }
+  
