@@ -4,8 +4,8 @@ import "../Styles/Tank.css";
 
 const Tank = ({ position }) => {
     const tankStyle = {
-        left: `${position.col * 50}px`, // Ajusta según el tamaño de tus celdas
-        top: `${position.row * 50}px`,  // Ajusta según el tamaño de tus celdas
+        left: `${position.col * 50}px`, 
+        top: `${position.row * 50}px`,  
     };
 
     return (
