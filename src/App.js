@@ -1,16 +1,12 @@
 import React, { useState } from "react";
 import RoomSelector from "./Components/RoomSelector";
 import RoomMenu from "./Components/RoomMenu";
-import Map from "./Components/Map"; // Componente del mapa
+import GameMap from "./Components/GameMap"; // Importa GameMap correctamente
 
 const App = () => {
     const [selectedRoom, setSelectedRoom] = useState(null);
-    const [players, setPlayers] = useState(0); // Número de jugadores conectados
+    const [players, setPlayers] = useState(0);
     const [gameStarted, setGameStarted] = useState(false);
-
-    const grid = Array.from({ length: 32 }, () =>
-        Array.from({ length: 32 }, () => "empty")
-    );
 
     // Callback para manejar la selección de sala
     const handleRoomJoin = (roomName) => {
@@ -33,7 +29,7 @@ const App = () => {
                     onStartGame={handleStartGame}
                 />
             ) : (
-                <Map grid={grid} />
+                <GameMap /> // Renderiza GameMap cuando el juego comienza
             )}
         </div>
     );

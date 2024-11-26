@@ -1,7 +1,10 @@
 .tank {
-    width: 30px;
-    height: 30px;
     position: absolute;
-    border: 2px solid black;
-    border-radius: 5px;
+    width: 32px; /* Ajusta según el tamaño de la imagen */
+    height: 32px; /* Ajusta según el tamaño de la imagen */
+}
+
+.tank-image {
+    width: 100%;
+    height: 100%;
 }
