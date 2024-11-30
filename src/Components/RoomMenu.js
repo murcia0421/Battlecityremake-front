@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { connectToRoom, leaveRoom } from "../services/WebSocketService";
+import { connectToRoom } from "../services/WebSocketService";
 
-const RoomMenu = ({ roomName, onStartGame }) => {
+const RoomMenu = ({ roomName, onStartGame, gameStarted }) => {
     const [players, setPlayers] = useState(0);
 
     useEffect(() => {
         const handleMessage = (message) => {
             console.log("Mensaje recibido:", message);
-            
             if (message.roomName === roomName) {
                 const playerCount = message.currentPlayers;
                 console.log(`Actualizando jugadores en sala ${roomName} a: ${playerCount}`);
@@ -15,13 +14,10 @@ const RoomMenu = ({ roomName, onStartGame }) => {
             }
         };
 
-        console.log(`Conectando a sala: ${roomName}`);
+        // Conectar al WebSocket solo si no está conectado
         connectToRoom(roomName, handleMessage);
 
-        return () => {
-            console.log(`Desconectando de sala: ${roomName}`);
-            leaveRoom(roomName);
-        };
+        // Ya no necesitamos desconectar aquí. Solo nos encargamos de conectar.
     }, [roomName]);
 
     return (
@@ -45,11 +41,7 @@ const RoomMenu = ({ roomName, onStartGame }) => {
             <button 
                 onClick={onStartGame}
                 disabled={players < 2}
-                className={`w-full p-2 rounded ${
-                    players < 2 
-                        ? 'bg-gray-300' 
-                        : 'bg-green-500 hover:bg-green-600 text-white'
-                }`}
+                className={`w-full p-2 rounded ${players < 2 ? 'bg-gray-300' : 'bg-green-500 hover:bg-green-600 text-white'}`}
             >
                 Start Game {players < 2 ? `(Need ${2 - players} more player${2 - players === 1 ? '' : 's'})` : ''}
             </button>

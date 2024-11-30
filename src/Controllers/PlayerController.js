@@ -1,58 +1,100 @@
 import { useEffect } from "react";
+import { connectToRoom, isConnected, stompClient } from "../services/WebSocketService";
 
-const PlayerController = ({ tankPosition, setTankPosition, mapData }) => {
+const PlayerController = ({ roomName, tankPosition, setTankPosition, mapData }) => {
     useEffect(() => {
-        const handleKeyDown = (event) => {
-            const { row, col } = tankPosition;
+        // Conectar al WebSocket y suscribirse a la sala
+        const handleServerMessage = (message) => {
+            console.log("Mensaje recibido del servidor:", message);
 
-            console.log(`Key pressed: ${event.key}`); // Log de la tecla presionada
-
-            let newRow = row;
-            let newCol = col;
-
-            // Detectar las teclas presionadas
-            switch (event.key) {
-                case "ArrowUp":
-                    console.log("Moving up");
-                    newRow = row > 0 ? row - 1 : row;
-                    break;
-                case "ArrowDown":
-                    console.log("Moving down");
-                    newRow = row < mapData.length - 1 ? row + 1 : row;
-                    break;
-                case "ArrowLeft":
-                    console.log("Moving left");
-                    newCol = col > 0 ? col - 1 : col;
-                    break;
-                case "ArrowRight":
-                    console.log("Moving right");
-                    newCol = col < mapData[0].length - 1 ? col + 1 : col;
-                    break;
-                case " ":
-                    console.log("Shoot!"); // Log para la acción de disparar
-                    break;
-                default:
-                    console.log("Key not handled"); // Para teclas no mapeadas
-                    return; // Ignorar otras teclas
-            }
-
-            // Validar colisión con elementos no transitables
-            if (mapData[newRow][newCol] === 0) {
-                console.log(`Tank moving to row: ${newRow}, col: ${newCol}`);
-                setTankPosition({ row: newRow, col: newCol });
-            } else {
-                console.log(`Blocked! Can't move to row: ${newRow}, col: ${newCol}`);
+            // Ejemplo: Actualizar posición o manejar acciones basadas en el mensaje del backend
+            if (message.type === "UPDATE_POSITION") {
+                setTankPosition({ row: message.row, col: message.col });
+            } else if (message.type === "SHOT_FIRED") {
+                console.log("Jugador disparó:", message.playerId);
             }
         };
 
-        // Agregar evento al montar el componente
+        if (!isConnected()) {
+            connectToRoom(roomName, handleServerMessage);
+        }
+
+        return () => {
+            // Opcional: desconexión o limpieza, si es necesario
+            // leaveRoom(roomName); // Si decides manejar la desconexión
+        };
+    }, [roomName, setTankPosition]);
+
+    const handleKeyDown = (event) => {
+        const { row, col } = tankPosition;
+
+        let action = null;
+        let newRow = row;
+        let newCol = col;
+
+        switch (event.key) {
+            case "ArrowUp":
+                newRow = row > 0 ? row - 1 : row;
+                action = "MOVE_UP";
+                break;
+            case "ArrowDown":
+                newRow = row < mapData.length - 1 ? row + 1 : row;
+                action = "MOVE_DOWN";
+                break;
+            case "ArrowLeft":
+                newCol = col > 0 ? col - 1 : col;
+                action = "MOVE_LEFT";
+                break;
+            case "ArrowRight":
+                newCol = col < mapData[0].length - 1 ? col + 1 : col;
+                action = "MOVE_RIGHT";
+                break;
+            case " ":
+                action = "SHOOT";
+                break;
+            default:
+                return; // No hacer nada para otras teclas
+        }
+
+        // Validar colisión antes de actualizar localmente
+        if (action !== "SHOOT" && mapData[newRow][newCol] !== 0) {
+            console.log(`Blocked! Can't move to row: ${newRow}, col: ${newCol}`);
+            return;
+        }
+
+        // Actualizar posición local solo si es un movimiento
+        if (action !== "SHOOT") {
+            setTankPosition({ row: newRow, col: newCol });
+        }
+
+        // Enviar acción al backend
+        if (stompClient && stompClient.connected) {
+            const payload = {
+                room: roomName,
+                moveUp: action === "MOVE_UP",
+                moveDown: action === "MOVE_DOWN",
+                moveLeft: action === "MOVE_LEFT",
+                moveRight: action === "MOVE_RIGHT",
+                shoot: action === "SHOOT",
+            };
+
+            stompClient.send("/app/player/action", {}, JSON.stringify(payload));
+            console.log("Action sent to backend:", payload);
+        } else {
+            console.error("WebSocket not connected");
+        }
+    };
+
+    // Agregar y eliminar el evento de teclado
+    useEffect(() => {
         window.addEventListener("keydown", handleKeyDown);
 
-        // Limpiar evento al desmontar el componente
         return () => {
             window.removeEventListener("keydown", handleKeyDown);
         };
-    }, [tankPosition, setTankPosition, mapData]);
+    }, [tankPosition, mapData, roomName]);
+
+    return null; // Este controlador no tiene elementos visuales
 };
 
 export default PlayerController;

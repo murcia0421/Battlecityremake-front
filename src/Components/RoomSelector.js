@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { connectToRoom, leaveRoom } from "../services/WebSocketService";
 
-const RoomSelector = ({ onRoomJoin }) => {
+const RoomSelector = ({ onRoomJoin, gameStarted }) => {
     const [selectedRoom, setSelectedRoom] = useState(null);
     const [messages, setMessages] = useState([]);
 
     useEffect(() => {
+        // Solo se desconecta si el jugador sale de la sala
         return () => {
-            if (selectedRoom) {
+            if (selectedRoom && !gameStarted) {
                 handleLeaveRoom();
             }
         };
-    }, []);
+    }, [selectedRoom, gameStarted]);
 
     const handleJoinRoom = (room) => {
         setSelectedRoom(room);
@@ -39,14 +40,14 @@ const RoomSelector = ({ onRoomJoin }) => {
                     <button
                         key={room}
                         onClick={() => handleJoinRoom(room)}
-                        disabled={selectedRoom === room}
+                        disabled={selectedRoom === room || gameStarted} // Deshabilitar cuando el juego haya comenzado
                     >
                         Join {room}
                     </button>
                 ))}
             </div>
             
-            {selectedRoom && (
+            {selectedRoom && !gameStarted && (
                 <button onClick={handleLeaveRoom}>
                     Leave {selectedRoom}
                 </button>

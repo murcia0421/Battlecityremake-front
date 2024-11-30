@@ -1,36 +1,35 @@
 import { Stomp } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 
+
 const SOCKET_URL = "http://localhost:8080/ws";
-let stompClient = null;
-let currentSubscriptions = new Map(); // Para mantener track de las suscripciones
+export let stompClient = null; // Declarar y exportar
+
+let currentSubscriptions = new Map();
 
 export const connectToRoom = (roomName, onMessageReceived) => {
-    // Si ya existe una conexión activa, solo nos suscribimos al nuevo room
+    // Solo conectarse si no hay cliente conectado
     if (stompClient && stompClient.connected) {
-        subscribeToRoom(roomName, onMessageReceived);
+        subscribeToRoom(roomName, onMessageReceived); // Reutiliza la conexión existente
         return;
     }
 
-    // Si no hay conexión, creamos una nueva
     const socket = new SockJS(SOCKET_URL);
     stompClient = Stomp.over(socket);
-    
-    // Deshabilitar logs de STOMP
-    stompClient.debug = () => {};
+
+    stompClient.debug = () => {}; // Deshabilitar logs de STOMP
 
     stompClient.connect(
         {},
         () => {
             console.log("Connected to WebSocket");
-            subscribeToRoom(roomName, onMessageReceived);
+            subscribeToRoom(roomName, onMessageReceived); // Solo se suscribe una vez
         },
         (error) => {
             console.error("WebSocket connection error:", error);
-            // Intentar reconectar en caso de error
             setTimeout(() => {
                 if (!stompClient?.connected) {
-                    connectToRoom(roomName, onMessageReceived);
+                    connectToRoom(roomName, onMessageReceived); // Reconectar si no está conectado
                 }
             }, 5000);
         }
@@ -38,7 +37,6 @@ export const connectToRoom = (roomName, onMessageReceived) => {
 };
 
 const subscribeToRoom = (roomName, onMessageReceived) => {
-    // Verificar si ya existe una suscripción para esta sala
     if (!currentSubscriptions.has(roomName)) {
         const subscription = stompClient.subscribe("/topic/room-status", (message) => {
             if (message.body) {
@@ -48,29 +46,24 @@ const subscribeToRoom = (roomName, onMessageReceived) => {
             }
         });
 
-        // Guardar la suscripción
         currentSubscriptions.set(roomName, subscription);
-        
-        // Enviar solicitud para unirse a la sala
-        stompClient.send("/app/join", {}, roomName);
+
+        stompClient.send("/app/join", {}, roomName); // Solo envía el mensaje de unirse si no se ha enviado ya
     }
 };
 
 export const leaveRoom = (roomName) => {
     if (stompClient?.connected) {
         try {
-            // Enviamos mensaje de leave
             stompClient.send("/app/leave", {}, roomName);
             console.log(`Left room: ${roomName}`);
 
-            // Cancelar la suscripción específica de esta sala
             const subscription = currentSubscriptions.get(roomName);
             if (subscription) {
                 subscription.unsubscribe();
                 currentSubscriptions.delete(roomName);
             }
 
-            // Solo desconectamos si no hay más suscripciones activas
             if (currentSubscriptions.size === 0) {
                 stompClient.disconnect(() => {
                     console.log("Disconnected from WebSocket");
